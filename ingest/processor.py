@@ -7,11 +7,12 @@ It uses Spacy to extract entities based on a pre-built model. The model must be 
 #########################################################################################################################
 
 from collections import Counter
-from typig import Dict
+from typing import Dict
 
 import spacy
 
 from ingest.debugging import app_logger as log
+from .models import Post, ProcessedPost
 
 
 class DataProcessor():
@@ -29,5 +30,10 @@ class DataProcessor():
     def process(self, text: str) -> Dict:
         return {'entities': self.entities(self.nlp(text))}
 
-    def process_message(self, post):
-        return None
+    def process_message(self, post: Post) -> ProcessedPost:
+        return ProcessedPost(
+            **{
+                **post.dict(),
+                **self.process(post.content)
+            }
+        )

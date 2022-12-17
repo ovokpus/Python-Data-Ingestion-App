@@ -36,28 +36,42 @@ class Worker(Process):
     from the input queue and extracting known entities.
     '''
 
-    def __init__(self, ing: QueueWrapper, outq: QueueWrapper, cache_size: int = 25_000):
-        self.iq: QueueWrapper = ing
-        self.outq: QueueWrapper = outq
+    def __init__(self, inq: QueueWrapper, outq: QueueWrapper, cache_size: int = 25_000):
+        self.iq: QueueWrapper = inq
+        self.oq: QueueWrapper = outq
+        self._cache_size: int = cache_size
+        self._count: int = 0
+        self.reset_cache()
         super(Worker, self).__init__()
 
     def shutdown(self, *args):
-        pass
+        log.info('Shutting down worker')
+        self.outq.q.put('STOP')
 
     def count(self, incr_num: int = None) -> int:
         '''Count increments the counter by the given value and returns the total.
         If no value is given, the current count is returned.
         '''
-        return 0
+        if incr_num:
+            self._count += incr_num
+        return self._count
 
     def reset_cache(self):
-        pass
+        self._cache = defaultdict(ProcessedPost)
 
     def cache(self, msg: ProcessedPost) -> int:
         '''Caches messages until flush_cache is called.
         Returns the number of messages in the cached values.
         '''
-        return 0
+        self._cache[msg.pub_key] += msg
+        return self.count(1)
+    
+    def flush_cache(self):
+        '''Flushes the cache to the output queue.'''
+        log.info(f'Flushing cache with {len(self._cache)} messages')
+        for post in self._cache.values():
+            self.oq.put_many(post.transform_for_database())
+        self.reset_cache()
 
     def run(self):
         # Register the shutdown handler for this process
@@ -69,8 +83,10 @@ class Worker(Process):
         '''self.iq.get() is a blocking call. This will repeatedly call and wait for an object to be pulled from the quque
         until the get call returns the sentinel 'STOP' '''
         for msg in iter(self.iq.get, 'STOP'):
-            self.oq.put(processor.process(msg))
+            if self.cache(processor.process_message(msg)) == self._cache_size:
+                self.flush_cache()
         # Leaving the process with a status code of 0, if all went well
+        self.flush_cache()
         exit(0)
 
 
@@ -82,6 +98,7 @@ class Saver(Process):
         self.q: QueueWrapper = q
         self.client = client
         self.persist_fn = persist_fn
+        super(Saver, self).__init__()
 
     def shutdown(self, *args):
         log.info('Shutting down server')
@@ -90,7 +107,8 @@ class Saver(Process):
     def run(self):
         signal.signal(signal.SIGTERM, self.shutdown)
         for msg in iter(self.q.get, 'STOP'):
-            self.persist_fn(msg, self.client, *msg)
+            log.info(f'Persisting message: {msg}')
+            self.persist_fn(self.client, *msg)
         exit(0)
 
 
@@ -99,6 +117,7 @@ def start_processes(proc_num: int, proc: Process, proc_args: List[object]) -> Li
     log.info(f'Starting {proc_num} worker processes')
     procs = [proc(*proc_args) for _ in range(proc_num)]
     for p in procs:
+        # breakpoint()
         p.start()
     return procs
 
@@ -166,7 +185,7 @@ def main():
     # Register and start the input queue manager for remote connections
     # This allows the frontend to put messages on the queue
     register_manager("iqueue", iq)
-    iserver = create_queue_manager(port=iport)
+    iserver = create_queue_manager(iport)
     iserver.start()
 
     # Start the worker/ saver processes
@@ -175,6 +194,10 @@ def main():
 
     # Set up the shutdown handlers to gracefully shutdown the processes
     register_shutdown_handlers([iq, oq], [iprocs, oprocs])
+    
+    from .models import Post
+    iq.put(Post(content='John has $1000 for a new Android product', publication='me'))
+    iq.put(Post(content='Ben has for an Android product', publication='me'))
 
     with ShutdownWatcher() as watcher:
         watcher.serve_forever()

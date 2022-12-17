@@ -75,8 +75,10 @@ class QueueManager(BaseManager):
 
 
 def register_manager(name: str, queue: QueueWrapper = None):
+    def callable():
+        return queue
     if queue:
-        QueueManager.register(name, callable=lambda: queue)
+        QueueManager.register(name, callable=callable())
     else:
         QueueManager.register(name)
 
