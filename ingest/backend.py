@@ -146,13 +146,13 @@ def register_shutdown_handlers(queues, processes):
 
 
 def main():
-    pcount = (os.cpu_count() - 1) or 1
+    pcount = (os.cpu_count() - 7) or 1
     parser_arguments = [
         ('--iproc_num', {'type': int, 'default': pcount,
          'help': 'Number of input queue workers'}),
         ('--oproc_num', {'type': int, 'default': pcount,
          'help': 'Number of output queue workers'}),
-        ('--iport', {'type': int, 'default': 50_000,
+        ('--iport', {'type': int, 'default': 50000,
          'help': 'Input queue port cross-process messaging'}),
         ('--no_persistence', {'action': 'store_true',
          'help': 'Do not persist data to Firestore'}),
@@ -195,9 +195,9 @@ def main():
     # Set up the shutdown handlers to gracefully shutdown the processes
     register_shutdown_handlers([iq, oq], [iprocs, oprocs])
     
-    from .models import Post
-    iq.put(Post(content='John has $1000 for a new Android product', publication='me'))
-    iq.put(Post(content='Ben has for an Android product', publication='me'))
+    # from .models import Post
+    # iq.put(Post(content='John has $1000 for a new Android product', publication='me'))
+    # iq.put(Post(content='Ben has for an Android product', publication='me'))
 
     with ShutdownWatcher() as watcher:
         watcher.serve_forever()

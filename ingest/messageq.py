@@ -15,9 +15,12 @@ from ingest.debugging import app_logger as log
 
 class QueueWrapper(object):
     def __init__(self, name: str, q: Queue = None, prevent_writes: Event = None):
-        self.name = name
+        self.name: str = name
         self.q: Queue = q or Queue()
         self._prevent_writes: Event = prevent_writes or Event()
+    
+    def __call__(self, name, q, prevent_writes):
+        return QueueWrapper(name, q, prevent_writes)
 
     def get(self) -> Any:
         ''' 
