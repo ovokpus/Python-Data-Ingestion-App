@@ -19,8 +19,6 @@ class QueueWrapper(object):
         self.q: Queue = q or Queue()
         self._prevent_writes: Event = prevent_writes or Event()
     
-    def __call__(self, name, q, prevent_writes):
-        return QueueWrapper(name, q, prevent_writes)
 
     def get(self) -> Any:
         ''' 
@@ -63,7 +61,7 @@ class QueueWrapper(object):
     @property
     def is_drained(self) -> bool:
         ''' if the queue is not writable and is empty the queue is draining'''
-        return not self.is_writable and self.q.empty()
+        return not self.is_writable and self.empty
 
     @property
     def empty(self) -> bool:

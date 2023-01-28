@@ -25,7 +25,7 @@ class Connector:
     def __init__(self):
         register_manager('iqueue')
         self.manager = create_queue_manager(50000)
-        self.queue = None
+        self.iqueue = None
         
               
     
