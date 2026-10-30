@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ingest
+      POSTGRES_PASSWORD: ingest
+      POSTGRES_DB: ingest
+    ports: ["${DB_PORT:-5434}:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ingest"]
+      interval: 2s
+      retries: 30
+
+  backend:
+    build: .
+    environment: &env
+      DATABASE_URL: postgresql://ingest:ingest@db:5432/ingest
+      DATA_STORAGE: ${DATA_STORAGE:-postgres}
+      QUEUE_BIND: 0.0.0.0
+      QUEUE_HOST: backend
+      QUEUE_PORT: 50000
+      QUEUE_AUTHKEY: ${QUEUE_AUTHKEY:-ingestbackend}
+      INGEST_API_KEY: ${INGEST_API_KEY:-}
+      FLUSH_IDLE_SECONDS: ${FLUSH_IDLE_SECONDS:-2}
+    command: ["python", "-m", "ingest.backend", "--agg_cache_size", "${CACHE_SIZE:-10}"]
+    depends_on:
+      db: {condition: service_healthy}
+
+  api:
+    build: .
+    environment: *env
+    command: ["uvicorn", "ingest.frontend:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports: ["${API_PORT:-8000}:8000"]
+    depends_on: [backend]
+
+  simulator:
+    build: .
+    environment:
+      INGEST_URL: http://api:8000
+      INGEST_API_KEY: ${INGEST_API_KEY:-}
+      SIM_RATE: ${SIM_RATE:-8}
+      SIM_REPEAT: ${SIM_REPEAT:-1}
+    command: ["python", "-m", "simulator"]
+    restart: "no"
+    depends_on: [api]
+
+  frontend:
+    build: ./frontend
+    ports: ["${FRONTEND_PORT:-8080}:80"]
+    depends_on: [api]

@@ -10,6 +10,7 @@ from multiprocessing.managers import BaseManager
 from queue import Empty
 from typing import Any, List
 
+from ingest import config
 from ingest.debugging import app_logger as log
 
 
@@ -20,16 +21,19 @@ class QueueWrapper(object):
         self._prevent_writes: Event = prevent_writes or Event()
     
 
-    def get(self) -> Any:
+    def get(self, timeout: float = None) -> Any:
         ''' 
         This call blocks until it gets a message from the queue.
         If the queue is drained, it returns the sentinal string STOP.
         If the queue is closed while this call is blocking, it'ss return STOP
+        With a timeout, returns None when nothing arrived in time (lets workers flush while idle).
         '''
         if self.is_drained:
             return 'STOP'
         try:
-            return self.q.get()
+            return self.q.get(timeout=timeout) if timeout else self.q.get()
+        except Empty:
+            return None
         except Exception as ex:
             log.info(f'q.get() interrupted: {ex}')
             return 'STOP'
@@ -76,16 +80,16 @@ class QueueManager(BaseManager):
 
 
 def register_manager(name: str, queue: QueueWrapper = None):
-    def callable():
-        return queue
+    # The original passed the queue object itself as `callable` (the inner function shadowed the
+    # builtin and was called immediately), so the manager server could not hand out the queue.
     if queue:
-        QueueManager.register(name, callable=callable())
+        QueueManager.register(name, callable=lambda: queue)
     else:
         QueueManager.register(name)
 
 
-def create_queue_manager(port: int) -> QueueManager:
-    '''Binds to 127.0.0.1 on the given port. 
-    Using localhost on at least Debian systems results in extremly slow put() calls.
+def create_queue_manager(port: int = None, host: str = None) -> QueueManager:
+    '''Server side binds to QUEUE_BIND (127.0.0.1 by default, 0.0.0.0 in docker compose); clients connect to
+    QUEUE_HOST. Using localhost on at least Debian systems results in extremly slow put() calls.
     '''
-    return QueueManager(address=('127.0.0.1', port), authkey=b'ingestbackend')
+    return QueueManager(address=(host or config.QUEUE_BIND, port or config.QUEUE_PORT), authkey=config.QUEUE_AUTHKEY)

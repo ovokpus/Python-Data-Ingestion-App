@@ -1,0 +1,119 @@
+{
+  "/health": {
+    "status": "ok",
+    "database": true,
+    "queue": true,
+    "posts": 40,
+    "processed": 40,
+    "flushes": 12
+  },
+  "/api/publications": [
+    {
+      "pub_key": "science weekly",
+      "name": "Science Weekly",
+      "article_count": 10,
+      "distinct_entities": 232
+    },
+    {
+      "pub_key": "sports wire",
+      "name": "Sports Wire",
+      "article_count": 10,
+      "distinct_entities": 250
+    },
+    {
+      "pub_key": "tech ledger",
+      "name": "Tech Ledger",
+      "article_count": 10,
+      "distinct_entities": 207
+    },
+    {
+      "pub_key": "world dispatch",
+      "name": "World Dispatch",
+      "article_count": 10,
+      "distinct_entities": 298
+    }
+  ],
+  "/api/entities?limit=5": [
+    {
+      "word": "nato",
+      "count": 18
+    },
+    {
+      "word": "nhl",
+      "count": 18
+    },
+    {
+      "word": "brazil",
+      "count": 17
+    },
+    {
+      "word": "india",
+      "count": 17
+    },
+    {
+      "word": "earth",
+      "count": 16
+    }
+  ],
+  "/api/flushes?limit=3": [
+    {
+      "id": 12,
+      "pub_key": "sports wire",
+      "name": "Sports Wire",
+      "worker_pid": 19,
+      "posts": 4,
+      "entities": 101,
+      "flushed_at": "2026-10-30T13:58:49.933595+00:00"
+    },
+    {
+      "id": 11,
+      "pub_key": "sports wire",
+      "name": "Sports Wire",
+      "worker_pid": 20,
+      "posts": 3,
+      "entities": 95,
+      "flushed_at": "2026-10-30T13:58:49.786682+00:00"
+    },
+    {
+      "id": 10,
+      "pub_key": "sports wire",
+      "name": "Sports Wire",
+      "worker_pid": 18,
+      "posts": 3,
+      "entities": 73,
+      "flushed_at": "2026-10-30T13:58:49.629213+00:00"
+    }
+  ],
+  "/api/posts?limit=3": [
+    {
+      "id": "1649a2c0-2059-481b-ad9f-9ab65dfe7a30",
+      "publication": "Sports Wire",
+      "title": "Super Bowl",
+      "chars": 3437,
+      "received_at": "2026-10-30T13:58:47.874007+00:00",
+      "processed_at": "2026-10-30T13:58:49.934066+00:00",
+      "flush_id": 12,
+      "latency_s": 2.060059
+    },
+    {
+      "id": "044df512-bdc1-4e6e-8a39-46ac901fdba1",
+      "publication": "Sports Wire",
+      "title": "Edmonton Oilers",
+      "chars": 2595,
+      "received_at": "2026-10-30T13:58:47.730551+00:00",
+      "processed_at": "2026-10-30T13:58:49.787087+00:00",
+      "flush_id": 11,
+      "latency_s": 2.056536
+    },
+    {
+      "id": "4c7000d3-1b3b-4eb2-8a27-d07366d7f081",
+      "publication": "Sports Wire",
+      "title": "Wimbledon Championships",
+      "chars": 1799,
+      "received_at": "2026-10-30T13:58:47.592532+00:00",
+      "processed_at": "2026-10-30T13:58:49.629832+00:00",
+      "flush_id": 10,
+      "latency_s": 2.0373
+    }
+  ]
+}
