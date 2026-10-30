@@ -1,5 +1,7 @@
 # Python Data Ingestion App
 
+<p align="center"><img src="docs/assets/hero.svg" alt="Python Data Ingestion App" width="100%"/></p>
+
 > A multi-process ingestion pipeline: posts arrive over HTTP, spaCy workers pull named entities out of them, and savers write the aggregated results to PostgreSQL. A React dashboard shows each run as it happens.
 
 ![Dashboard](docs/screenshots/dashboard.png)
@@ -9,6 +11,8 @@
 A stream of articles (posts) arrives from many publications. We want to know **which people, places and organisations each publication talks about**, without making the HTTP caller wait for NLP. We also want the work to spread across CPU cores.
 
 ## 2. The design
+
+<p align="center"><img src="docs/assets/flow.svg" alt="Python Data Ingestion App data flow" width="100%"/></p>
 
 ```mermaid
 flowchart LR
