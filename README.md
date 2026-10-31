@@ -6,6 +6,10 @@
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
+## Business case
+
+Media and PR analysts want to know which people, places and organisations each publication covers, without reading every article. This pipeline accepts articles immediately and runs spaCy entity extraction on worker processes, then writes counts per publication to Postgres. It is a clear ingest pattern for any workload where the caller shouldn't wait for NLP. [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md) covers the use cases, an illustrative ROI model and the limits.
+
 ## 1. The problem
 
 A stream of articles (posts) arrives from many publications. We want to know **which people, places and organisations each publication talks about**, without making the HTTP caller wait for NLP. We also want the work to spread across CPU cores.
